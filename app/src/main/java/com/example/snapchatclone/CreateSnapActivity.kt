@@ -14,6 +14,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
@@ -86,43 +87,33 @@ class CreateSnapActivity : AppCompatActivity() {
 
     fun nextClicked(view: View){
 
-        // Get the data from an ImageView as bytes
-
-        // Get the data from an ImageView as bytes
         createsnapImageView?.setDrawingCacheEnabled(true)
         createsnapImageView?.buildDrawingCache()
-        val bitmap = (  createsnapImageView?.getDrawable() as BitmapDrawable).bitmap
+        val bitmap = createsnapImageView?.getDrawingCache()
         val baos = ByteArrayOutputStream()
         bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-        val data: ByteArray = baos.toByteArray()
+        val data = baos.toByteArray()
 
 
 
-
-
-        val uploadTask: UploadTask =  FirebaseStorage.getInstance().getReference().child("images").child(image_name).putBytes(data)
-        uploadTask.addOnFailureListener {
+        val uploadTask = FirebaseStorage.getInstance().getReference().child("images").child(image_name).putBytes(data)
+        uploadTask.addOnFailureListener(OnFailureListener {
             // Handle unsuccessful uploads
+            Toast.makeText(this,"UploadFailed",Toast.LENGTH_SHORT).show()
+        }).addOnSuccessListener(OnSuccessListener<UploadTask.TaskSnapshot> { taskSnapshot ->
+            // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+            val downloadUrl = taskSnapshot.getMetadata()?.getReference()?.getDownloadUrl().toString()
+            Log.i("URL", downloadUrl.toString())
 
-            Toast.makeText(applicationContext,"upload failed",Toast.LENGTH_LONG).show()
+            val intent = Intent(this, ChooseUserActivity::class.java)
+            intent.putExtra("imageURL",downloadUrl.toString())
+            intent.putExtra("imageName",image_name)
+            intent.putExtra("message",message?.text.toString())
+            startActivity(intent)
+        })
 
+    }
 
-        }.addOnSuccessListener {OnSuccessListener<UploadTask.TaskSnapshot>{taskSnapshot ->
-
-            val download = taskSnapshot.getMetadata()?.getReference()?.getDownloadUrl().toString()
-
-            Log.i("Download url ", download )
-
-
-        }
-            // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-            // ...
-
-
-
-
-
-        }
 
 
     }
@@ -139,4 +130,3 @@ class CreateSnapActivity : AppCompatActivity() {
 
 
 
-}

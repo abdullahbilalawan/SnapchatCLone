@@ -33,14 +33,17 @@ class MainActivity : AppCompatActivity() {
         mAuth.signInWithEmailAndPassword(emailEditText?.text.toString(), passwordEditText?.text.toString())
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    FirebaseDatabase.getInstance().getReference().child("Users").child(task.result?.user.toString()).child("email").setValue(emailEditText?.text.toString())
-                    
+
                     logIn()
                 } else {
                     // Sign up the user
                     mAuth.createUserWithEmailAndPassword(emailEditText?.text.toString(), passwordEditText?.text.toString()).addOnCompleteListener(this) { task ->
                         if (task.isSuccessful) {
                             logIn()
+                            Toast.makeText(this,"Loged in", Toast.LENGTH_SHORT).show()
+                            FirebaseDatabase.getInstance().getReference().child("Users").child(task.result?.user?.uid.toString()).child("email").setValue(emailEditText?.text.toString())
+
+
                         } else {
                             Toast.makeText(this,"Login Failed. Try Again.", Toast.LENGTH_SHORT).show()
                         }
